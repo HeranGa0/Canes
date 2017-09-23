@@ -1,0 +1,2 @@
+scanf(x);
+print(x);
