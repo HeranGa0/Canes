@@ -1,5 +1,5 @@
 # Canes
-Stone language created by c++
+Canes language created by c++
  
 ```python
 print("Hello,world") 
