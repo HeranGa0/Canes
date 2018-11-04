@@ -11,6 +11,9 @@
 #include "Enviroment.h"
 #include"ASTstructures.h"
 #include <tuple>
+#include"QLineEdit"
+#include"QEventLoop"
+#include"Class.h"
 class Function
 {
 public:
@@ -66,5 +69,34 @@ public:
 private:
     std::string _name;
 };
+
+class PrintFunction:public NativeFunction
+{
+public:
+    PrintFunction(std::string name,QLineEdit* output):NativeFunction(name),_output(output) {
+
+    }
+   QLineEdit* _output;
+};
+class ScanfFunction:public NativeFunction
+{
+public:
+    ScanfFunction(std::string name,QLineEdit* output,QEventLoop*timer):NativeFunction(name),_output(output),_timer(timer) {
+
+    }
+   QLineEdit* _output;
+    QEventLoop* _timer;
+   std::string afterInput="";
+};
+
+class NewInstanceFunction: public NativeFunction
+{
+public:
+    NewInstanceFunction(std::string name,Object* ci):NativeFunction(name),_ci(ci) {
+
+    }
+    Object* _ci;
+};
+
 
 #endif /* Function_h */

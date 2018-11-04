@@ -26,7 +26,7 @@ class BasicParser
 	};
 
 public:
-	BasicParser(const char* fileName) :lexer(fileName) {
+    BasicParser(std::string passage) :lexer(passage) {
 		operators.insert(std::make_pair(std::string{ "<" }, new Precedence(1, true)));
         operators.insert(std::make_pair(std::string{ "<=" }, new Precedence(1, true)));
 		operators.insert(std::make_pair(std::string{ ">" }, new Precedence(1, true)));
@@ -67,6 +67,9 @@ public:
     ASTree* defclass();
     ASTree* createInstance();
     ASTree* elements();
+    ASTree* operatorfunc();
+    ASTree* typelist();
+
     bool isEndOfFile() {
         if(lexer.peek()==&Token::EOF_TOKEN)
             return true;

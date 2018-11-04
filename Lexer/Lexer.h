@@ -5,20 +5,23 @@
 #include <string>
 #include"Token.h"
 #include<list>
-#include<fstream>
+#include<sstream>
 
+/** define
+*  A lexer class for tokenizing the given file
+*/
 class Lexer
 {
 public:
 	
-	Lexer(const char* fileName)
-	{
-		reader.open(fileName);
-	}
+    Lexer(std::string passage):reader(passage)
+        {
+
+        }
 	
 	~Lexer() 
 	{
-		reader.close();
+
 	}
 	Token* peek(unsigned int i = 0) {
 		if (fillQueue(i))
@@ -46,15 +49,15 @@ private:
 
 	unsigned int lineNumber = 0;
 	//const std::regex spaceN{ std::string("\\s*") };
-	const std::regex comment{ std::string("\\s*(//.*)") };
-	const std::regex num{ std::string("\\s*[0-9]+") };
+    const std::regex comment{ std::string("\\s*(\\/\\/.*)") };
+    const std::regex num{ std::string("\\s*[0-9]+") };
     const std::regex dnum{ std::string("\\s*[0-9]+\\.{1}[0-9]+") };
-	const std::regex id{ std::string("\\s*([A-Z_a-z][A-Z_a-z0-9]*|==|!=|<=|>=|&&|\\|\\||[[:punct:]])") };
+    const std::regex id{ std::string("\\s*([A-Z_a-z][A-Z_a-z0-9]*|==|\\+=|\\-=|\\*=|\\/=|\\+\\+|!=|<=|>=|&&|\\|\\||[[:punct:]])") };
 	const std::regex str{ std::string("\\s*\"(\\\\\"|\\\\\\\\|\\\\n|[^\"])*\"") };
 
 	std::vector<Token*> queue;
 	bool hasMore = true;
-	std::ifstream reader;
+    std::istringstream reader;
 
 	bool fillQueue(unsigned int i) {
 		while (i >= queue.size()) {

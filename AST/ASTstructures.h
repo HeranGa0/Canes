@@ -6,7 +6,7 @@
 #include"Token.h"
 #include"Enviroment.h"
 #include"Informations.h"
-
+#include<QDebug>
 class ASTree;
 using ASTiterator = std::vector<ASTree*>::iterator;
 
@@ -21,6 +21,10 @@ public:
 	virtual  ASTiterator iterator() {
 		return children();
 	}
+    virtual std::string name() {
+        return "ASTree";
+    }
+
 	virtual std::string toString() = 0;
     virtual Object* eval(Enviroment&env)=0;
     
@@ -37,7 +41,7 @@ public:
 	ASTLeaf(Token * t) : _token(t) {}
 	ASTree* child(int i) {
 		std::cout << "ASTLeaf has no child";
-		return nullptr;
+        return nullptr;
 	}
 	int numChildren() {
 		return 0;
@@ -57,7 +61,7 @@ public:
     
     virtual Object* eval(Enviroment&env) {
         std::cerr<<__FILE__<<__LINE__<<std::endl;
-        return nullptr;
+        return new NullObject();
     }
     
 	virtual ~ASTLeaf()
@@ -83,9 +87,12 @@ public:
 	}
     virtual Object* eval(Enviroment&env) {
         std::cerr<<__FILE__<<__LINE__<<std::endl;
-        return nullptr;
+        return new NullObject();
     }
-    
+    std::vector<ASTree*> getChildren() {
+        return _children;
+    }
+
 	std::string toString();
 
 	std::string location();
@@ -115,11 +122,11 @@ public:
     DnumberLiteral(Token * t):ASTLeaf(t) {
         
     }
-    double value() {
+    float value() {
         return token()->getDnumber();
     }
     virtual Object* eval(Enviroment&env) {
-        return new ObjectSub<double>(value());
+        return new ObjectSub<float>(value());
     }
 };
 
@@ -132,6 +139,42 @@ public:
 	}
     virtual Object* eval(Enviroment&env) {
         return(env.get(name()));
+    }
+
+};
+class NilLiteral : public ASTLeaf
+{
+public:
+    NilLiteral(Token* t) :ASTLeaf(t) {}
+    std::string value() {
+        return token()->getText();
+    }
+    virtual Object* eval(Enviroment&env) {
+        return new NullObject();
+    }
+};
+
+class Trueiteral : public ASTLeaf
+{
+public:
+    Trueiteral(Token* t) :ASTLeaf(t) {}
+    std::string value() {
+        return token()->getText();
+    }
+    virtual Object* eval(Enviroment&env) {
+        return new TrueObject();
+    }
+};
+
+class Falseiteral : public ASTLeaf
+{
+public:
+    Falseiteral(Token* t) :ASTLeaf(t) {}
+    std::string value() {
+        return token()->getText();
+    }
+    virtual Object* eval(Enviroment&env) {
+        return new FalseObject();
     }
 };
 
@@ -153,7 +196,7 @@ class BinaryExpr :public ASTList
 protected:
     Object* computeAssign(Enviroment& env,Object* rvalue);
     Object* computeINumber(int l, std::string op,int r);
-    Object* computeDNumber(double l, std::string op,double r);
+    Object* computeDNumber(float l, std::string op,float r);
     
 
     Object* computeOp(Object* l , std::string op, Object* r);
@@ -169,6 +212,16 @@ public:
         return child(2);
     }
     virtual Object* eval(Enviroment& env);
+};
+
+class Operators:public ASTList
+{
+public:
+
+    Operators(const std::vector<ASTree*> &c):ASTList(c){}
+    virtual Object* eval(Enviroment& env);
+private:
+
 };
 
 class Postfix:public ASTList
@@ -194,13 +247,27 @@ class FixedArguments: public Arguments
 public:
     FixedArguments(std::vector<ASTree*>& c):Arguments(c){}
     virtual Object* eval(Enviroment& callerEnv,Object* value ) override ;
+    auto cBegin() {
+        return _children.begin();
+    }
+    auto cEnd() {
+        return _children.end();
+    }
 };
 
 
 class PrimaryExpr : public ASTList
 {
 private:
-	PrimaryExpr(const std::vector<ASTree*>& c):ASTList(c) {}
+    PrimaryExpr(const std::vector<ASTree*>& c):ASTList(c) {
+        for(int index=1;index<numChildren();index++) {
+           if(child(index)->toString()==".new") {
+               newIndex = index;
+           }
+        }
+    }
+    int newIndex;
+
 public:
 	static ASTree* create(const std::vector<ASTree*>&c) {
 		return c.size() == 1 ? c.at(0) : new PrimaryExpr(c);
@@ -235,13 +302,13 @@ public:
 	}
 
 	ASTree* operand() {
-		return child(0);
+        return child(1);
 	}
 
 	std::string toString() {
 		return "-" + operand()->toString();
 	}
-    virtual Object* eval(Enviroment env) {
+    virtual Object* eval(Enviroment& env) {
         auto v = (operand())->eval(env);
         if(auto iv=dynamic_cast<ObjectSub<int>*>(v)) {
             iv->value = (-1)*(iv->value);
@@ -249,9 +316,55 @@ public:
         }
         else {
             PRINT_ERR_ARGS("NegativeExpr should be IntType!")
-            return nullptr;
+            return new NullObject();
         }
             
+    }
+};
+
+
+class NotExpr : public ASTList
+{
+public:
+    NotExpr(const std::vector<ASTree*>&c) :ASTList(c) {
+
+    }
+
+    ASTree* operand() {
+        return child(1);
+    }
+
+    std::string toString() {
+        return "!" + operand()->toString();
+    }
+    virtual Object* eval(Enviroment& env) {
+        auto v = (operand())->eval(env);
+        qDebug()<<QString::fromStdString(v->toString());
+        if(auto iv=dynamic_cast<TrueObject*>(v)) {
+            return new FalseObject();
+        }
+        else if(auto iv=dynamic_cast<FalseObject*>(v)) {
+            return new TrueObject();
+        }
+        else {
+            PRINT_ERR_ARGS("should be TrueObject or FalseObject!")
+            return new NullObject();
+        }
+
+    }
+};
+
+class ReturnStmnt: public ASTList
+{
+public:
+    ReturnStmnt(const std::vector<ASTree*>&c) :ASTList(c) {
+
+    }
+    std::string toString() {
+        return "return " +child(0)->toString();
+    }
+    virtual Object* eval(Enviroment&env) {
+        return new ReturnObject(child(0)->eval(env));
     }
 };
 
@@ -264,6 +377,9 @@ public:
         for(auto t: _children) {
             if(t)
                 result = t->eval(env);
+            auto reobj=dynamic_cast<ReturnObject*>(result);
+            if(reobj)
+                return reobj;
         }
         return result;
     }
@@ -295,7 +411,7 @@ public:
          for(int index=1; index<numChildren()-2;index+=2) {
             str+=thenBlock(index)->toString()+" "+"orif ";
          }
-		return ")if " + condition(0)->toString() + " " + str + " else " + elseBlock()->toString() + ")";
+        return "if " + condition(0)->toString() + " " + thenBlock(1)->toString();
 	}
     virtual Object* eval(Enviroment& env) {
        /* auto c = (condition())->eval(env);
@@ -310,14 +426,14 @@ public:
         }*/
         for(int index=0; index<numChildren()-1;index+=2) {
             auto c = condition(index)->eval(env);
-            if(c&&dynamic_cast<ObjectSub<int>*>(c)->value!=false)
+            if(c&&dynamic_cast<TrueObject*>(c))
                 return (thenBlock(index+1))->eval(env);
         }
         auto b = elseBlock();
         if(b)
             return b->eval(env);
         else
-            return nullptr;
+            return new NullObject();
     }
 };
 
@@ -335,11 +451,20 @@ public:
     virtual Object* eval(Enviroment& env) override{
         Object* result =nullptr;
         //auto cond =condition()->eval(env);
-        while(dynamic_cast<ObjectSub<int>*>(condition()->eval(env))->value) {
+        while(dynamic_cast<TrueObject*>(condition()->eval(env))) {
             
             result = (body())->eval(env);
+            if(dynamic_cast<BreakObject*>(result)) {
+                break;
+            }
+            auto reobj=dynamic_cast<ReturnObject*>(result);
+            if(reobj)
+                return reobj->rValue;
         }
-        return result;
+        if(result)
+            return result;
+        else
+            return new NullObject();
     }
     
 private:
@@ -397,6 +522,8 @@ public:
     std::string toString() override{
         return "(fun "+ parameters()->toString()+" "+body()->toString();
     }
+
+
     virtual Object* eval(Enviroment& env) override;
 };
 
@@ -404,7 +531,7 @@ class DefStmnt :public Fun
 {
 public:
     DefStmnt(const std::vector<ASTree*> c):Fun(c){}
-    std::string name() {
+    std::string name() override {
         return ((ASTLeaf*)child(0))->token()->getText();
     }
     ParameterList* parameters() override {
@@ -467,15 +594,19 @@ public:
     virtual Object* eval(Enviroment& env,Object* value) override;
 };
 
+
 class NewObject: public ASTList
 {
 public:
     NewObject(const std::vector<ASTree*>& c):ASTList(c){}
+    NewObject(const std::vector<ASTree*>& c,Object* ciobj,FixedArguments* p):ASTList(c),_ciobj(ciobj),_p(p){}
     
     virtual Object* eval(Enviroment& env) override;
-    
-   
+private:
+    Object* _ciobj = nullptr;
+    FixedArguments* _p;
 };
+
 
 class ArrayRV : public ASTList
 {
@@ -487,14 +618,19 @@ public:
         return numChildren();
     }
     virtual Object* eval(Enviroment& env) override {
-        auto sz = size();
-        Object* *ary = new Object*[sz];
+        auto arrayWrapper = new ArrayWrapper();
+        /*if(size()==0) {
+            return arrayWrapper;
+        }
+      */
+        //Object* *ary = new Object*[sz];
         int i = 0;
         for(auto c: _children) {
-            ary[i++] = c->eval(env);
+            arrayWrapper->exArray [i++] = c->eval(env);
         }
-        return new ArrayWrapper(ary,i);
+        return  arrayWrapper;
     }
+
 };
 
 class ArraySuffix : public Postfix
@@ -513,15 +649,35 @@ public:
         auto cValue = dynamic_cast<ArrayWrapper*>(value);
         if(!cValue) {
             PRINT_ERR_ARGS("Bad array type!");
-            return nullptr;
+            return new NullObject();
         }
         auto idex = index()->eval(env);
         auto cIdex = dynamic_cast<ObjectSub<int>*>(idex);
-        if(!cIdex) {
+        /*if(!cIdex) {
             PRINT_ERR_ARGS("bad array index!");
             return nullptr;
+        }*/
+        if(cIdex){
+                return (cValue->exArray)[(cIdex->value)];
+            }
+
+        auto sIdx = dynamic_cast<ObjectSub<std::string>*>(idex);
+        if(sIdx) {
+            return (cValue->acArray)[(sIdx->value)];
         }
-        return (cValue->array)[cIdex->value];
+    }
+};
+
+
+class BreakStmnt:public ASTLeaf
+{
+public:
+    BreakStmnt(Token * t):ASTLeaf(t) {
+
+    }
+
+    virtual Object* eval(Enviroment&env) {
+        return new BreakObject();
     }
 };
 
@@ -551,11 +707,20 @@ private:
     virtual Object* eval(Enviroment& env) override {
         initSt()->eval(env);
         Object* result = nullptr;
-        while(dynamic_cast<ObjectSub<int>*>(condition()->eval(env))->value) {
+        while(dynamic_cast<TrueObject*>(condition()->eval(env))) {
             result = body()->eval(env);
+            if(dynamic_cast<BreakObject*>(result)) {
+                break;
+            }
+            /*if(dynamic_cast<ReturnObject*>(result))
+                return result;*/
+
             iteraEpr()->eval(env);
         }
-        return result;
+        if(result)
+            return result;
+        else
+            return new NullObject();
     }
     
 };
@@ -589,14 +754,20 @@ private:
             PRINT_ERR_ARGS("Bad type for ArrayWrapper!");
             return nullptr;
         }
-        auto aPointer = castArray->array;
+        auto aPointer = castArray->exArray;
         auto bk = body();
         Object* result = nullptr;
         for(int i=0; i< castArray->memberNumber();i++) {
-            env.put(castVar->name(), aPointer[i]);
+            env.put(castVar->name(), castArray->atInt(i));
             result=bk->eval(env);
+            if(dynamic_cast<BreakObject*>(result)) {
+                break;
+            }
         }
-        return result;
+        if(result)
+            return result;
+        else
+            return new NullObject();
     }
 
 };

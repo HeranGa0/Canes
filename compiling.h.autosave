@@ -1,0 +1,11 @@
+#ifndef COMPILING_H
+#define COMPILING_H
+#include<QString>
+class Compiler
+{
+   public:
+    Compiler()
+    static QString insertExpand(QString text, QString currentLoc);
+};
+
+#endif // COMPILING_H

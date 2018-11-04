@@ -1,5 +1,5 @@
 #include "BasicParser.h"
-
+#include<QDebug>
 void BasicParser::token(std::string name)
 {
     Token* t = lexer.read();
@@ -42,7 +42,8 @@ ASTree* BasicParser::params()
 ASTree* BasicParser::param_list()
 {   ASTree* _params = nullptr;
     if(isToken("(")) {
-        lexer.read();
+        token("(");
+        skipEOL();
         if(lexer.peek()->isIdentifier()&&(!isToken(")"))) {
              _params = params();
         }
@@ -59,11 +60,13 @@ ASTree* BasicParser::param_list()
 
 ASTree* BasicParser::def() {
     std::vector<ASTree*> list;
-    if(isToken("function")) {
-        token("function");
+    if(isToken("fun")) {
+        token("fun");
+        skipEOL();
         if(lexer.peek()->isIdentifier()) {
             auto idName = lexer.read();
             list.push_back(new ASTLeaf(idName));
+            skipEOL();
             auto plist = param_list();
             list.push_back(plist);
             skipEOL();
@@ -149,8 +152,16 @@ ASTree * BasicParser::primary()
     else if(isToken("new")) {
         result = createInstance();
     }
-    else if(isToken("function")) {
-        token("function");
+    else if(isToken("break")) {
+        result = new BreakStmnt(lexer.read());
+    }
+    else if(isToken("return")) {
+        token("return");
+        result = new ReturnStmnt(std::vector<ASTree*>{expression()});
+    }
+    else if(isToken("fun")) {
+        token("fun");
+        skipEOL();
         auto pas = param_list();
         skipEOL();
         auto bk = block();
@@ -169,8 +180,20 @@ ASTree * BasicParser::primary()
             
         }
         else if (ntoken->isIdentifier()) {
+            if(ntoken->getText()=="nil") {
+                result= new NilLiteral(ntoken);
+            }
+            else if(ntoken->getText()=="true") {
+                result= new Trueiteral(ntoken);
+            }
+            else if(ntoken->getText()=="false") {
+                result= new Falseiteral(ntoken);
+                qDebug()<<QString::fromStdString(lexer.peek(0)->getText());
+            }
+            else
             result = new Name(ntoken);
         }
+
         else if (ntoken->isString()) {
             result = new StringLiteral(ntoken);
         }
@@ -199,11 +222,18 @@ ASTree * BasicParser::factor()
         auto prime = primary();
         return new NegativeExpr(std::vector<ASTree*>{new ASTLeaf(ntoken), prime});
     }
+    else if (lexer.peek(0)->getText() == "!") {
+        auto ntoken = lexer.read();
+        qDebug()<<QString::fromStdString(ntoken->getText());
+        auto prime = primary();
+        return new NotExpr(std::vector<ASTree*>{new ASTLeaf(ntoken), prime});
+    }
     else {
         auto prime = primary();
         return prime;
     }
 }
+
 
 ASTree * BasicParser::expression()
 {
@@ -218,29 +248,35 @@ ASTree * BasicParser::expression()
 ASTree* BasicParser::block()
 {   std::vector<ASTree*> bList;
     auto pToken = lexer.peek(0);
-    
+    qDebug()<<QString::fromStdString(pToken->getText());
     if(pToken->getText()=="{") {
         token("{");
         auto sNode = statement();
         if(sNode) {
             bList.push_back(sNode);
         }
-        
-        while(isToken(";")||isToken(Token::EOL)) {
-            auto nToken = lexer.read();
+        qDebug()<<QString::fromStdString(sNode->toString());
+        while(!isToken("}")) {
+        while(isToken(";")||isToken(Token::EOL)){
+              //||isToken("}")) {
+            //if(!isToken("}")) {
+            auto nToken = lexer.read();}
+            //qDebug()<<QString::fromStdString(nToken->getText());
             if(!(isToken("}")||isToken(";")||isToken(Token::EOL))) {
                 auto nNode = statement();
+                 qDebug()<<QString::fromStdString(nNode->toString());
                 if(nNode) {
                     bList.push_back(nNode);
                 }
-            }
+            }//}
         }
         
         
-        
+
         auto rToken = lexer.peek();
-        
+        qDebug()<<QString::fromStdString(rToken->getText());
         if(rToken->getText()=="}") {
+
             token("}");
             return new BlockStmnt(bList);
             
@@ -257,16 +293,19 @@ ASTree* BasicParser::block()
 }
 
 ASTree* BasicParser::statement() {
-    while(isToken("\\n")) {
+   while(isToken("\\n")) {
         token("\\n");
     }
-    
+
     
     if(isToken("if")) {
         token("if");
+        qDebug()<< QString::fromStdString(lexer.peek(0)->getText());
         auto eNode = expression();
+        qDebug()<< QString::fromStdString(lexer.peek(0)->getText());
         skipEOL();
         auto bNode = block();
+         qDebug()<<QString::fromStdString(bNode->toString());
         skipEOL();
         std::vector<ASTree*> list{eNode,bNode};
         
@@ -302,6 +341,7 @@ ASTree* BasicParser::statement() {
             token(":");
             auto aNode = expression();
             token(")");
+            skipEOL();
             auto bNode = block();
             return new Foreach(std::vector<ASTree*>{ iNode,aNode,bNode});
         }
@@ -322,7 +362,7 @@ ASTree* BasicParser::statement() {
 
 ASTree* BasicParser::member() {
     auto nToken = lexer.peek();
-    if(nToken->getText() == "function") {
+    if(nToken->getText() == "fun") {
         return def();
     }
     return expression();
@@ -368,14 +408,64 @@ ASTree* BasicParser::defclass() {
     return new ClassStmnt(list);
 }
 
+ASTree* BasicParser::typelist(){
+    token("(");
+    std::vector<ASTree*> list;
+    while(isToken(Token::EOL)) {
+        lexer.read();
+    }
+    do {
+         auto x= expression();
+        list.push_back(x);
+        qDebug()<<QString::fromStdString(x->toString());
+        while(isToken(",")||isToken(Token::EOL)) {
+           lexer.read();
+
+        }
+    }
+    while(!isToken(")"));
+    token(")");
+    return new ParameterList(list);
+}
+
 ASTree* BasicParser::elements() {
     std::vector<ASTree*> list;
-    list.push_back(expression());
-    while(isToken(",")) {
-        token(",");
-        list.push_back(expression());
+    while(isToken(Token::EOL)) {
+        lexer.read();
     }
+   // list.push_back(expression());
+    while(!isToken("]"))
+    {
+        list.push_back(expression());
+        while(isToken(",")||isToken(Token::EOL)) {
+            lexer.read();
+
+        }
+    }
+
+   /* while(!isToken("]")) {
+        while(isToken(",")||isToken(Token::EOL)) {
+            lexer.read();
+
+        }
+         list.push_back(expression());
+    }*/
     return new ArrayRV(list);
+}
+
+ASTree* BasicParser::operatorfunc() {
+    token("operator");
+    skipEOL();
+    if(!lexer.peek()->isIdentifier())
+        PRINT_ERR_ARGS("is not identifier!");
+    auto op = lexer.read();
+    skipEOL();
+    auto typel = typelist();
+    skipEOL();
+    auto parames = param_list();
+    skipEOL();
+    auto oBody = block();
+    return new Operators(std::vector<ASTree*>{new ASTLeaf(op),typel,parames,oBody});
 }
 
 ASTree* BasicParser::program() {
@@ -383,11 +473,14 @@ ASTree* BasicParser::program() {
         lexer.read();
     }
     ASTree* nNode = nullptr;
-    if(isToken("function")) {
+    if(isToken("fun")) {
         nNode = def();
     }
     else if(isToken("class")) {
         nNode = defclass();
+    }
+    else if(isToken("operator")) {
+        nNode = operatorfunc();
     }
     else {
         nNode = statement();
@@ -430,5 +523,7 @@ bool BasicParser::rightIsExpr(int prec, Precedence * nextPrec)
     else
         return false;
 }
+
+
 
 

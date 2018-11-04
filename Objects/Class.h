@@ -10,6 +10,7 @@
 #define Class_h
 #include "Enviroment.h"
 #include"ASTstructures.h"
+#include<QDebug>
 class ClassInfo
 {
 protected:
@@ -19,6 +20,7 @@ protected:
 public:
     ClassInfo(ClassStmnt* cs, Enviroment* env):definition(cs),_enviroment(env){
         Object* obj = env->get(cs->superClass());
+        //qDebug()<<QString::fromStdString(obj->toString());
         if(!obj)
             _superClass=nullptr;
         else if((_superClass=((dynamic_cast<ObjectSub<ClassInfo*>*>(obj))->value))) {
@@ -28,6 +30,19 @@ public:
             PRINT_ERR_ARGS("Unknown superclass "+cs->toString());
         }
     }
+    bool ifExistingSuperclass(std::string cn) {
+        if(name()!=cn) {
+            if(superClass()!=nullptr) {
+                return superClass()->ifExistingSuperclass(cn);
+            }
+            else
+                return false;
+        }
+        else
+            return true;
+
+    }
+
     std::string name() {
         return definition->name();
     }
@@ -43,18 +58,27 @@ public:
     std::string toString() {
         return "< class "+name()+" >";
     }
-    static void initObj(ClassInfo* ci, Enviroment* cEnv) {
-        if(ci->superClass()) {
-            initObj(ci->superClass(),cEnv);
+    DefStmnt* findFunction(std::string fName) {
+        for(ASTree* m:body()->getChildren()) {
+
+            auto isFunc= dynamic_cast<DefStmnt*>(m);
+            if(isFunc) {
+                if(isFunc->name()==fName)
+                return isFunc;
+            }
+
         }
-        ci->body()->eval(*cEnv);
+        return nullptr;
     }
+
+    static void initObj(ClassInfo* ci, Enviroment* cEnv,FixedArguments* fa);
+
 };
 
 class Instance
 {
 public:
-    Instance(Enviroment* e):env(e){}
+    Instance(Enviroment* e,ClassInfo* ci):env(e),_ci(ci){}
     std::string toString() {
         return "<Instance:" + std::to_string(typeid(this).hash_code());
     }
@@ -68,6 +92,7 @@ public:
     void putMember(std::string name,Object* value) {
         env->putNew(name, value);
     }
+    ClassInfo* _ci;
 protected:
     Enviroment* env;
     Enviroment* getEnv(std::string member) {
@@ -75,7 +100,7 @@ protected:
         if(e!=nullptr && e == env)
             return e;
         else {
-            PRINT_ERR_ARGS("This enviroment could Not find the given member!");
+            PRINT_ERR_ARGS("This enviroment could Not find the given member: "+member);
             return nullptr;
         }
     }

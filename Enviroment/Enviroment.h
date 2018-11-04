@@ -43,7 +43,11 @@ public:
     }
 
        Object* get(const std::string &name) {
-        return values.at(name);
+        auto result= values.at(name);
+        if(!result) {
+            return  nullptr;
+        }
+        return result;
     }
     Enviroment* where(const std::string& name){
         PRINT_ERR_ARGS("BasicEnv should Not use where function!");
