@@ -1,4 +1,4 @@
-# Cpp_Implemention_Stone
+# Canes
 Stone language created by c++
  
 ```python
