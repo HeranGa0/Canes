@@ -4,7 +4,7 @@ Download Canes editor here
 ## What is Canes?
 Canes is a scripting language designed by me. Its syntax is similar to python or javascript, or the combinaiton of both. Anyone who is familar with each can learn canes in an hour. Although its syntax is not complcated, it has its own uniqness and can actually do many cool things. 
 So why would I design it? The anwser is simple, just for fun. Designing a programming language and writing it an interpreter is such a romantic thing for our programmers, isn't it? The other point is that, alghough canes might not have many advanages over javascript and python, it has its own charm. Don't believe it? You can read the following handbook and try to code a little bit in a simple editor for canes that I made. Have fun! 
-<a href="https://drive.google.com/open?id=1vyBRLxzYTch8r2EKstG0QBPV4pG3DGaH">**Download Canes Editor here!**</a>
+<a href="https://drive.google.com/open?id=1AL2PRX3EnBatgThJGEMclZ00tHBbVgP1">**Download Canes Editor on Mac here! (Temporally Not avaliable for Windows **</a>
 ```python
 print("Hello,world") 
 ```
