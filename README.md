@@ -1,8 +1,10 @@
 # Canes
-Canes language created by c++
+Download Canes editor here
 
-# What is Canes?
-Canes is a scripting language designed by me. Its syntax is similar to python or javascript, or the combinaiton of both. Anyone who is familar with each can learn canes in an hour. Although its syntax is not complcated, it has its own uniqness and can actually do many cool things. For example.... So why would I design it? The anwser is simple, just for fun. Designing a programming language and writing it an interpreter is such a romantic thing for our programmers, isn't it? The other point is that, alghough canes might not have many advanages over javascript and python, it has its own charm. Don't believe it? You can read the following handbook and try to code a little bit in a simple editor for canes that I made. Have fun! 
+## What is Canes?
+Canes is a scripting language designed by me. Its syntax is similar to python or javascript, or the combinaiton of both. Anyone who is familar with each can learn canes in an hour. Although its syntax is not complcated, it has its own uniqness and can actually do many cool things. 
+So why would I design it? The anwser is simple, just for fun. Designing a programming language and writing it an interpreter is such a romantic thing for our programmers, isn't it? The other point is that, alghough canes might not have many advanages over javascript and python, it has its own charm. Don't believe it? You can read the following handbook and try to code a little bit in a simple editor for canes that I made. Have fun! 
+<a href="https://drive.google.com/open?id=1vyBRLxzYTch8r2EKstG0QBPV4pG3DGaH">**Download Canes Editor here!**</a>
 ```python
 print("Hello,world") 
 ```
@@ -181,13 +183,13 @@ for (x : unsor_list) {
 Function:
 function syntax:
 ```c++
-func name(parameter1, parameter2, parameter3) {
+fun name(parameter1, parameter2, parameter3) {
     code to be executed
 }
 ```
 Example
 ```c++
-func calcplus(num1, num2) {
+fun calcplus(num1, num2) {
     return num1+num2       
     //Canes function can only return a single value
 }
@@ -196,13 +198,13 @@ print(calcplus(1,2)) // 3
 ```
 Since function is first-class value ([What are first-class values](http://lambda-the-ultimate.org/node/1518)) , its definition can be used/passed as a variable, for example:
 ```c++
-func functor(func1) {
+fun functor(func1) {
      return func1(1,2)
 }
-func add(num1,num2) {
+fun add(num1,num2) {
      return num1+num2
 }
-func multiply(num1,num2) {
+fun multiply(num1,num2) {
      return num1*num2
 }
 functor(add) //passing add as a variable to functor, giving a result of 3
@@ -211,8 +213,8 @@ functor(multiply) // 2
 Canes function supports Closures ([What are closures](https://www.lua.org/pil/6.1.html))
 Example:
 ```c++
-func closure(x) {
-    return func() {
+fun closure(x) {
+    return fun() {
          return x = x+1
     }
 }
@@ -237,7 +239,7 @@ class myClass {
     A simple example class
     i = null
 
-    func f(self) {
+    fun f(self) {
         return i
     }
 }
@@ -258,10 +260,10 @@ class myClass {
     //A simple example class
     i = null
     //constructor myClass
-    func myClass(x) {
+    fun myClass(x) {
         i = x
     }
-    func getI() {
+    fun getI() {
         return i
     }
 }
