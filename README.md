@@ -281,6 +281,49 @@ Class identified name is also a first-class variable ([What are first-class valu
 ```c++
 z = myClass   // z is assigned bt myClass
 ```
+Class Inheritance
+Syntax:
+```java
+class DerivedClassName extends BaseClassName {
+    //DerivedClass constructor
+    func DerivedClassName(arg1,arg2...agrx) {
+    //BaseClass constructor
+        BaseClassName(agr1)
+    }
+    <statement-1>
+    .
+    .
+    .
+    <statement-N>
+ }
+ ```
+ The first line inside the Derived class constructor must always be base class constructor.
+ Once a Derived class has been created, it can access and call all the variables and methods in the base class. For example,
+```java
+class father
+{
+       age
+       fun father(age1) {
+              age = age1
+         }     
+       fun printAge() {
+           print(age)
+       }
+}
+
+class child extends father {
+       height
+       fun child(age1) {
+              father(age1)
+              height1 = 185
+            
+         }     
+}
+c1 = child.new(30)
+print(c1.age) //30
+c1.printAge() //30
+```
+ 
 Operator overloading
 Syntax:
 ```c++
