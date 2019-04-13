@@ -1,5 +1,5 @@
 # Canes
-## <a href="https://drive.google.com/open?id=1AL2PRX3EnBatgThJGEMclZ00tHBbVgP1">Download Canes editor here!
+<a href="https://drive.google.com/open?id=1AL2PRX3EnBatgThJGEMclZ00tHBbVgP1">Download Canes editor here!
 
 ## What is Canes?
 Canes is a scripting language designed by me. Its syntax is similar to python or javascript, or the combinaiton of both. Anyone who is familar with each can learn canes in an hour. Although its syntax is not complcated, it has its own uniqness and can actually do many cool things. 
