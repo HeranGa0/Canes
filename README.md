@@ -1,5 +1,5 @@
 # Canes
-<a href="https://drive.google.com/open?id=1AL2PRX3EnBatgThJGEMclZ00tHBbVgP1"> Download Canes Editor and testing on Mac here! </a> (Notice that sometimes the editor will crush when snytax of the codes being typed incorrectly, however the bug will be fixed soon.)
+<a href="https://drive.google.com/open?id=129AoT5DON6_7Abq4UVQCYE11MSPSV1_P"> Download Canes Editor and test immediately on Mac here! </a> (Notice that occasionally the editor will crush when the snytax of the codes being typed incorrectly, however the bug will be fixed soon.)
 
 ## What is Canes?
 Canes is a scripting language designed by me and implemented based on C++. Its syntax is similar to python or javascript, or the combinaiton of both. Anyone who is familar with each can learn Canes in an hour. Although its syntax is not complicated, it has its own uniqness and can actually do many cool things. 
